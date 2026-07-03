@@ -1,0 +1,20 @@
+{
+  "src": [
+    "pages/SplashPage",
+    "pages/Index",
+    "pages/PostDetailPage",
+    "pages/PublishPage",
+    "pages/LoginPage",
+    "pages/RegisterPage",
+    "pages/UserProfilePage",
+    "pages/EditProfilePage",
+    "pages/StarDustRewardPage",
+    "pages/StarDustRulesPage",
+    "pages/SearchPage",
+    "pages/SettingsPage",
+    "pages/AboutPage",
+    "pages/FollowListPage",
+    "pages/ChatListPage",
+    "pages/ChatPage"
+  ]
+}

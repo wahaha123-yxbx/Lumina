@@ -1,0 +1,80 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Lumina校园论坛 - 以星尘之力连接每一个有趣的灵魂"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Lumina主入口"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Lumina"
+    },
+    {
+      "name": "internet_permission_reason",
+      "value": "需要网络连接来获取论坛内容和消息"
+    },
+    {
+      "name": "network_permission_reason",
+      "value": "需要获取网络状态以优化浏览体验"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "用于拍摄照片发布帖子和更换头像"
+    },
+    {
+      "name": "media_permission_reason",
+      "value": "用于选择相册图片发布帖子和更换头像"
+    },
+    {
+      "name": "tab_home",
+      "value": "首页"
+    },
+    {
+      "name": "tab_hot",
+      "value": "热点"
+    },
+    {
+      "name": "tab_message",
+      "value": "消息"
+    },
+    {
+      "name": "tab_profile",
+      "value": "我的"
+    },
+    {
+      "name": "stardust_unit",
+      "value": "星尘"
+    },
+    {
+      "name": "post_publish",
+      "value": "发布"
+    },
+    {
+      "name": "post_title_hint",
+      "value": "分享你的校园生活…"
+    },
+    {
+      "name": "comment_hint",
+      "value": "说点什么…"
+    },
+    {
+      "name": "reward_title",
+      "value": "星尘打赏"
+    },
+    {
+      "name": "reward_desc",
+      "value": "用星尘表达你的赞赏"
+    },
+    {
+      "name": "login_title",
+      "value": "欢迎来到Lumina"
+    },
+    {
+      "name": "login_desc",
+      "value": "用星尘之力连接每一个有趣的灵魂"
+    }
+  ]
+}

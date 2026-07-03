@@ -1,0 +1,35 @@
+# ===== Node.js =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== HarmonyOS / DevEco Studio =====
+.hvigor/
+**/build/
+**/.preview/
+local.properties
+
+# ===== IDE =====
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ===== Misc =====
+*.log
+*.tmp

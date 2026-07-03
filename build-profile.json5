@@ -1,0 +1,55 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\wa'ha'ha\\.ohos\\config\\default_Lumina_fprVAJzSS6UzMltB8-QFokxFraW79N83I1D8_uy8xDk=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001A0F9B7FE8A94AC56AD3C2B76678BBEFC3AB6E8A0CE203C330ABA5F0A04827DBC599A7067D2CB7",
+          "profile": "C:\\Users\\wa'ha'ha\\.ohos\\config\\default_Lumina_fprVAJzSS6UzMltB8-QFokxFraW79N83I1D8_uy8xDk=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\wa'ha'ha\\.ohos\\config\\default_Lumina_fprVAJzSS6UzMltB8-QFokxFraW79N83I1D8_uy8xDk=.p12",
+          "storePassword": "0000001A702CFD163F09CD1D533D6EE3D703C6344F26BBC0591543682E523EAD2628610001A61622CB19"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+        "targetSdkVersion": "5.0.0(12)",
+        "buildOption": {
+          "strictMode": {
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release",
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
