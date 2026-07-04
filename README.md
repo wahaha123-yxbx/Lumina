@@ -40,7 +40,7 @@ Lumina/
 |---|---|
 | 前端 | HarmonyOS ArkTS, ArkUI, DevEco Studio |
 | 后端 | Node.js, Express 4.x |
-| 数据 | SQLite|
+| 数据 | SQLite db|
 | API | RESTful, Token 认证 |
 
 ## 快速开始
