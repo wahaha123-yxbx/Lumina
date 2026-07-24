@@ -47,6 +47,23 @@ function authMiddleware(req, res, next) {
 
 // --- 密码工具 ---
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
+// ============ SMTP 邮箱配置（二选一） ============
+// 方式一：在此处直接填写（推荐）
+// 方式二：调用 POST /api/admin/smtp-config 在运行时配置
+let smtpConfig = {
+  host: '',       // SMTP 地址，如 smtp.qq.com
+  port: 465,      // 465(SSL) 或 587(TLS)
+  secure: true,
+  user: '',       // 邮箱账号
+  pass: ''        // SMTP 授权码
+};
+let mailFrom = ''; // 发件人地址
+
+// 注册验证码存储：email -> { code, expiresAt }
+const verificationCodes = new Map();
+
 function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
 }
@@ -63,6 +80,7 @@ function parseJson(str) {
 // 兼容旧数据库：尝试添加新列
 try { db.exec('ALTER TABLE users ADD COLUMN projectCount REAL DEFAULT 0'); } catch (e) { /* 列已存在 */ }
 try { db.exec("ALTER TABLE users ADD COLUMN skills TEXT DEFAULT '[]'"); } catch (e) { /* 列已存在 */ }
+try { db.exec("ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''"); } catch (e) { /* 列已存在 */ }
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS projects (
@@ -118,12 +136,56 @@ db.exec(`
 
 // --- 认证 API ---
 
+// 发送注册验证码
+app.post('/api/auth/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ code: 1, message: '邮箱不能为空' });
+
+  const exists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  if (exists) return res.status(400).json({ code: 1, message: '该邮箱已注册' });
+
+  if (!smtpConfig.host || !smtpConfig.user || !smtpConfig.pass) {
+    return res.status(400).json({ code: 1, message: 'SMTP 未配置，请先调用 POST /api/admin/smtp-config 设置' });
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  verificationCodes.set(email, { code, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpConfig.host, port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      auth: { user: smtpConfig.user, pass: smtpConfig.pass }
+    });
+    await transporter.sendMail({
+      from: mailFrom || smtpConfig.user,
+      to: email,
+      subject: 'Lumina 注册验证码',
+      text: `您的注册验证码为：${code}，有效期 5 分钟。如非本人操作，请忽略此邮件。`
+    });
+    res.json({ code: 0, message: '验证码已发送' });
+  } catch (e) {
+    console.error('邮件发送失败:', e);
+    res.status(500).json({ code: 1, message: '验证码发送失败，请检查 SMTP 配置' });
+  }
+});
+
 app.post('/api/auth/register', (req, res) => {
-  const { studentId, password, nickname } = req.body;
+  const { studentId, password, nickname, email, code } = req.body;
   if (!studentId || !password) return res.status(400).json({ code: 1, message: '学号和密码不能为空' });
+  if (!email || !code) return res.status(400).json({ code: 1, message: '邮箱和验证码不能为空' });
+
+  // 验证码校验
+  const record = verificationCodes.get(email);
+  if (!record) return res.status(400).json({ code: 1, message: '请先获取验证码' });
+  if (record.code !== code) return res.status(400).json({ code: 1, message: '验证码错误' });
+  if (Date.now() > record.expiresAt) return res.status(400).json({ code: 1, message: '验证码已过期，请重新获取' });
 
   const exists = db.prepare('SELECT id FROM users WHERE studentId = ?').get(studentId);
   if (exists) return res.status(400).json({ code: 1, message: '该学号已注册' });
+
+  const emailExists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  if (emailExists) return res.status(400).json({ code: 1, message: '该邮箱已注册' });
 
   const salt = makeSalt();
   const userId = genId('u');
@@ -146,7 +208,8 @@ app.post('/api/auth/register', (req, res) => {
     level: 1,
     levelTitle: '星尘新芽',
     projectCount: 0,
-    skills: '[]'
+    skills: '[]',
+    email
   };
 
   const columns = Object.keys(user);
@@ -154,6 +217,7 @@ app.post('/api/auth/register', (req, res) => {
   const stmt = db.prepare(`INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`);
   stmt.run(Object.values(user));
 
+  verificationCodes.delete(email);
   const token = setToken(userId);
   res.json({ code: 0, data: { token, user }, message: '注册成功' });
 });
@@ -1041,6 +1105,16 @@ app.post('/api/admin/seed-projects', (req, res) => {
 });
 
 // --- 启动 ---
+
+// SMTP 运行时配置
+app.post('/api/admin/smtp-config', (req, res) => {
+  const { host, port, secure, user, pass, from } = req.body;
+  if (!host || !user || !pass) return res.status(400).json({ code: 1, message: 'host、user、pass 为必填' });
+  smtpConfig = { host, port: port || 465, secure: secure !== undefined ? secure : true, user, pass };
+  if (from) mailFrom = from;
+  res.json({ code: 0, message: 'SMTP 配置已保存（重启后失效）' });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 Lumina SQLite API Server running at http://localhost:' + PORT);
 });
