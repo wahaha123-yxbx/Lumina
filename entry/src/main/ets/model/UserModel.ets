@@ -18,6 +18,9 @@ export class UserModel {
   joinDate: number = Date.now()
   level: number = 1
   levelTitle: string = '星尘新芽'
+  skills: string[] = []
+  email: string = ''
+  projectCount: number = 0
 
   calculateLevel(): void {
     const dust = this.totalStarDustReceived
@@ -53,6 +56,9 @@ export class UserModel {
     this.joinDate = Date.now()
     this.level = 1
     this.levelTitle = '星尘新芽'
+    this.skills = []
+    this.email = ''
+    this.projectCount = 0
   }
 }
 
@@ -75,6 +81,9 @@ export class LoginUserData {
   joinDate: number = -1
   level: number = -1
   levelTitle: string = ''
+  skills: string[] = []
+  email: string = ''
+  projectCount: number = -1
 }
 
 /**
@@ -101,6 +110,9 @@ export function loginCurrentUser(data: LoginUserData): void {
   if (data.followingCount >= 0) CurrentUser.followingCount = data.followingCount
   if (data.followerCount >= 0) CurrentUser.followerCount = data.followerCount
   if (data.joinDate >= 0) CurrentUser.joinDate = data.joinDate
+  if (data.skills && data.skills.length > 0) CurrentUser.skills = data.skills
+  if (data.email) CurrentUser.email = data.email
+  if (data.projectCount >= 0) CurrentUser.projectCount = data.projectCount
   CurrentUser.calculateLevel()
 }
 

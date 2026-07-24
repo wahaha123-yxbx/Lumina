@@ -1,5 +1,5 @@
 import { HomePage } from './HomePage'
-import { HotPage } from './HotPage'
+import { ProjectSquarePage } from './ProjectSquarePage'
 import { MessagePage } from './MessagePage'
 import { ProfilePage } from './ProfilePage'
 import { C, FontSize, Spacing } from '../common/Constants'
@@ -40,8 +40,8 @@ struct Index {
     }
   }
 
-  private tabIcons: string[] = ['⌂', '☍', '', '◈', '◎']
-  private tabLabels: string[] = ['首页', '热榜', '', '消息', '我的']
+  private tabIcons: string[] = ['⌂', '▣', '', '◈', '◎']
+  private tabLabels: string[] = ['首页', '项目', '', '消息', '我的']
 
   @Builder TabBarBuilder(index: number) {
     Column() {
@@ -103,7 +103,7 @@ struct Index {
         TabContent() { HomePage() }
         .tabBar(this.TabBarBuilder(0))
 
-        TabContent() { HotPage() }
+        TabContent() { ProjectSquarePage() }
         .tabBar(this.TabBarBuilder(1))
 
         TabContent() { Column() {} }

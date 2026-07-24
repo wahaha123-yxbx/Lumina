@@ -4,6 +4,9 @@ import { PostCard } from '../components/PostCard'
 import { Colors, C, FontSize, Spacing, BorderRadius } from '../common/Constants'
 import { CurrentUser } from '../model/UserModel'
 import { UserApi } from '../common/UserApi'
+import { ProjectApi } from '../common/ProjectApi'
+import { MockProjectService } from '../common/MockData'
+import { ProjectModel, getCategoryColor } from '../model/ProjectModel'
 import { promptAction, router } from '@kit.ArkUI'
 
 /**
@@ -17,10 +20,13 @@ export struct HomePage {
   @State isLoading: boolean = false
   @StorageLink('feedNeedsRefresh') @Watch('onFeedRefresh') needsRefresh: boolean = false
   @State checkedInToday: boolean = false
+  @State hotProjects: ProjectModel[] = []
+  @State newProjects: ProjectModel[] = []
   private scroller: Scroller = new Scroller()
 
   aboutToAppear(): void {
     this.loadPosts()
+    this.loadProjects()
   }
 
   onFeedRefresh(): void {
@@ -82,6 +88,62 @@ export struct HomePage {
     }
   }
 
+  async loadProjects(): Promise<void> {
+    // 先本地 Mock 数据
+    this.hotProjects = MockProjectService.getHotProjects(3)
+    this.newProjects = MockProjectService.getNewProjects(3)
+    // 后台尝试刷新
+    const discover = await ProjectApi.getDiscover()
+    if (discover && discover.hotProjects.length > 0) {
+      this.hotProjects = discover.hotProjects
+      this.newProjects = discover.newProjects
+    }
+  }
+
+  @Builder ProjectCard(item: ProjectModel) {
+    Column() {
+      Text(item.title)
+        .fontSize(13).fontWeight(FontWeight.Bold).fontColor(C.textPrimary)
+        .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+      Text(item.leaderName + ' · ' + item.getStatusLabel())
+        .fontSize(11).fontColor(C.textHint).margin({ top: 2 })
+      Text(item.members.length + '/' + item.maxMembers + '人 · ' + item.completedTaskCount + '/' + item.taskCount + '任务')
+        .fontSize(10).fontColor(C.textHint).margin({ top: 2 })
+    }
+    .width(140).padding(Spacing.md).backgroundColor(C.bgCard)
+    .borderRadius(BorderRadius.md).margin({ right: Spacing.sm })
+    .onClick(() => {
+      router.pushUrl({ url: 'pages/ProjectDetailPage', params: { projectId: item.id } })
+    })
+  }
+
+  @Builder ProjectRecommendSection() {
+    if (this.hotProjects.length > 0) {
+      Column() {
+        Row() {
+          Text('🔥 推荐项目').fontSize(FontSize.title).fontWeight(FontWeight.Bold).fontColor(C.textPrimary)
+          Blank()
+          Text('查看更多 →').fontSize(FontSize.sm).fontColor(C.primary)
+            .onClick(() => { router.pushUrl({ url: 'pages/ProjectSquarePage' }) })
+        }
+        .width('100%').padding({ left: Spacing.lg, right: Spacing.lg, bottom: Spacing.sm })
+
+        Scroll() {
+          Row({ space: 0 }) {
+            ForEach(this.hotProjects, (item: ProjectModel) => {
+              this.ProjectCard(item)
+            }, (item: ProjectModel) => item.id)
+          }
+          .padding({ left: Spacing.lg, right: Spacing.lg })
+        }
+        .scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
+        .width('100%')
+      }
+      .width('100%').padding({ top: Spacing.sm, bottom: Spacing.sm })
+      .backgroundColor(C.bg)
+    }
+  }
+
   @Builder StarDustBanner() {
     Row() {
       Text('✦')
@@ -135,6 +197,9 @@ export struct HomePage {
 
       // 星尘签到横幅
       this.StarDustBanner()
+
+      // 推荐项目（新增）
+      this.ProjectRecommendSection()
 
       // 标签筛选栏
       this.TagFilterBuilder()

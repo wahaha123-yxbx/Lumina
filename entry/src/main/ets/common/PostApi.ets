@@ -135,6 +135,7 @@ export class PostApi {
     p.id = raw.id
     p.title = raw.title
     p.content = raw.content
+    p.images = raw.images || []
     p.authorId = raw.authorId
     p.authorName = raw.authorName
     p.authorAvatar = raw.authorAvatar

@@ -15,8 +15,10 @@ export class ApiResponse<T> {
  * 封装 @ohos.net.http 网络请求
  */
 export class ApiClient {
-  // 后端服务器地址 —— 模拟器用 10.0.2.2，真机改成电脑局域网IP
-  static readonly BASE_URL: string = 'http://10.0.2.2:3000'
+  // 后端服务器地址
+  // 本地开发：http://10.0.2.2:3000（模拟器）/ http://localhost:3000
+  // 线上服务器：https://lumina.hoshikaze.top
+  static readonly BASE_URL: string = 'https://lumina.hoshikaze.top'
 
   // 认证 token（登录后设置）
   static authToken: string = ''
@@ -40,6 +42,13 @@ export class ApiClient {
    */
   static async put<T>(path: string, body?: Object): Promise<ApiResponse<T>> {
     return ApiClient.request<T>('PUT', path, body)
+  }
+
+  /**
+   * DELETE 请求
+   */
+  static async delete<T>(path: string): Promise<ApiResponse<T>> {
+    return ApiClient.request<T>('DELETE', path)
   }
 
   /**

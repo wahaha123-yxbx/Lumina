@@ -14,6 +14,16 @@ class RegisterBody {
   studentId: string = ''
   password: string = ''
   nickname: string = ''
+  email: string = ''
+  code: string = ''
+}
+
+class SendCodeBody {
+  email: string = ''
+}
+
+class SendCodeResult {
+  message: string = ''
 }
 
 class AuthResult {
@@ -38,6 +48,7 @@ class UpdateUserBody {
   campus: string = ''
   major: string = ''
   grade: string = ''
+  skills: string[] = []
 }
 
 class CheckInResult {
@@ -48,6 +59,19 @@ class CheckInResult {
  * 用户相关 API
  */
 export class UserApi {
+  /**
+   * 发送注册验证码
+   */
+  static async sendCode(email: string): Promise<string> {
+    const body = new SendCodeBody()
+    body.email = email
+    const res = await ApiClient.post<SendCodeResult>('/api/auth/send-code', body)
+    if (res.code === 0) {
+      return res.message || '验证码已发送'
+    }
+    return res.message || '发送失败'
+  }
+
   /**
    * 学号 + 密码登录
    */
@@ -71,14 +95,16 @@ export class UserApi {
   }
 
   /**
-   * 注册
+   * 注册（需先调用 sendCode 获取验证码）
    */
-  static async register(studentId: string, password: string, nickname: string): Promise<LoginResult> {
+  static async register(studentId: string, password: string, nickname: string, email: string, code: string): Promise<LoginResult> {
     const result = new LoginResult()
     const body = new RegisterBody()
     body.studentId = studentId
     body.password = password
     body.nickname = nickname
+    body.email = email
+    body.code = code
     const res = await ApiClient.post<AuthResult>('/api/auth/register', body)
     if (res.code === 0 && res.data) {
       ApiClient.authToken = res.data.token
@@ -108,13 +134,14 @@ export class UserApi {
     return res.code === 0
   }
 
-  static async updateUser(id: string, nickname: string, bio: string, campus: string = '', major: string = '', grade: string = ''): Promise<UserModel | undefined> {
+  static async updateUser(id: string, nickname: string, bio: string, campus: string = '', major: string = '', grade: string = '', skills: string[] = []): Promise<UserModel | undefined> {
     const body = new UpdateUserBody()
     body.nickname = nickname
     body.bio = bio
     body.campus = campus
     body.major = major
     body.grade = grade
+    body.skills = skills
     const res = await ApiClient.put<UserModel>('/api/users/' + id, body)
     if (res.code === 0 && res.data) {
       return UserApi.mapUser(res.data)
@@ -138,11 +165,8 @@ export class UserApi {
     return []
   }
 
+  // getRewardRecords: 后端已移除 /api/users/:id/rewards 端点，暂时返回空数组
   static async getRewardRecords(userId: string): Promise<StarDustRecord[]> {
-    const res = await ApiClient.get<StarDustRecord[]>('/api/users/' + userId + '/rewards')
-    if (res.code === 0 && res.data) {
-      return res.data
-    }
     return []
   }
 
@@ -161,6 +185,9 @@ export class UserApi {
     d.followingCount = raw.followingCount
     d.followerCount = raw.followerCount
     d.joinDate = raw.joinDate
+    d.skills = raw.skills || []
+    d.email = raw.email || ''
+    d.projectCount = raw.projectCount || 0
     return d
   }
 
@@ -181,6 +208,9 @@ export class UserApi {
     u.followerCount = raw.followerCount
     u.level = raw.level
     u.levelTitle = raw.levelTitle
+    u.skills = raw.skills || []
+    u.email = raw.email || ''
+    u.projectCount = raw.projectCount || 0
     return u
   }
 }

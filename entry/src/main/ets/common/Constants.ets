@@ -170,4 +170,10 @@ export class Routes {
   static readonly STARDUST_REWARD: string = 'pages/StarDustRewardPage'
   static readonly SEARCH: string = 'pages/SearchPage'
   static readonly SETTINGS: string = 'pages/SettingsPage'
+
+  // 项目协作（新增）
+  static readonly PROJECT_SQUARE: string = 'pages/ProjectSquarePage'
+  static readonly PROJECT_DETAIL: string = 'pages/ProjectDetailPage'
+  static readonly TASK_BOARD: string = 'pages/TaskBoardPage'
+  static readonly PUBLISH_PROJECT: string = 'pages/PublishProjectPage'
 }

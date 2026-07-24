@@ -15,16 +15,47 @@ struct PublishPage {
   @State isSubmitting: boolean = false
   @State showTagPicker: boolean = false
   @State selectedImages: Array<string> = []
+  @State publishMode: number = 0  // 0=发帖子, 1=发项目
 
   @Builder HeaderBuilder() {
     Row() {
       Text('←').fontSize(24).fontColor(C.textPrimary).onClick(() => { router.back() })
-      Text('发布帖子').fontSize(FontSize.lg).fontColor(C.textPrimary).fontWeight(FontWeight.Medium).margin({ left: Spacing.md })
+      // Tab 切换
+      Row() {
+        Text('发帖子')
+          .fontSize(FontSize.body)
+          .fontWeight(this.publishMode === 0 ? FontWeight.Bold : FontWeight.Normal)
+          .fontColor(this.publishMode === 0 ? C.primary : C.textHint)
+          .padding({ left: Spacing.md, right: Spacing.md, top: 4, bottom: 4 })
+          .borderRadius(BorderRadius.full)
+          .backgroundColor(this.publishMode === 0 ? C.primaryBg : Color.Transparent)
+          .onClick(() => { this.publishMode = 0 })
+
+        Text('发项目')
+          .fontSize(FontSize.body)
+          .fontWeight(this.publishMode === 1 ? FontWeight.Bold : FontWeight.Normal)
+          .fontColor(this.publishMode === 1 ? C.primary : C.textHint)
+          .padding({ left: Spacing.md, right: Spacing.md, top: 4, bottom: 4 })
+          .borderRadius(BorderRadius.full)
+          .backgroundColor(this.publishMode === 1 ? C.primaryBg : Color.Transparent)
+          .margin({ left: Spacing.sm })
+          .onClick(() => { this.publishMode = 1 })
+      }
+      .margin({ left: Spacing.md })
       Blank()
-      Button('发布').fontSize(FontSize.body).fontColor(Color.White).fontWeight(FontWeight.Bold)
-        .backgroundColor(this.titleText.trim().length > 0 ? C.primary : C.textHint)
-        .borderRadius(BorderRadius.sm).height(34).padding({ left: Spacing.lg, right: Spacing.lg })
-        .onClick(() => { this.publishPost() })
+      if (this.publishMode === 0) {
+        Button('发布').fontSize(FontSize.body).fontColor(Color.White).fontWeight(FontWeight.Bold)
+          .backgroundColor(this.titleText.trim().length > 0 ? C.primary : C.textHint)
+          .borderRadius(BorderRadius.sm).height(34).padding({ left: Spacing.lg, right: Spacing.lg })
+          .onClick(() => { this.publishPost() })
+      } else {
+        Button('发布项目').fontSize(FontSize.sm).fontColor(Color.White).fontWeight(FontWeight.Bold)
+          .backgroundColor(C.primary).borderRadius(BorderRadius.sm).height(34)
+          .padding({ left: Spacing.md, right: Spacing.md })
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/PublishProjectPage' })
+          })
+      }
     }.width('100%').height(48).padding({ left: Spacing.lg, right: Spacing.lg }).backgroundColor(C.bgCard)
   }
 
@@ -58,7 +89,24 @@ struct PublishPage {
   build() {
     Column() {
       this.HeaderBuilder()
-      if (this.isSubmitting) {
+      if (this.publishMode === 1) {
+        // 发项目模式 → 引导到专门的发布项目页
+        Column() {
+          Column() {
+            Text('📂').fontSize(56).opacity(0.6)
+            Text('创建新项目').fontSize(FontSize.xl).fontWeight(FontWeight.Bold).fontColor(C.textPrimary).margin({ top: Spacing.md })
+            Text('发起一个科研项目、竞赛组队、兴趣创作...').fontSize(FontSize.body).fontColor(C.textHint).margin({ top: Spacing.sm })
+            Button('🚀 开始创建项目').fontSize(FontSize.body).fontWeight(FontWeight.Bold)
+              .fontColor(Color.White).backgroundColor(C.primary)
+              .borderRadius(BorderRadius.md).height(48)
+              .padding({ left: Spacing.xxl, right: Spacing.xxl })
+              .margin({ top: Spacing.lg })
+              .onClick(() => { router.pushUrl({ url: 'pages/PublishProjectPage' }) })
+          }
+          .width('100%').layoutWeight(1).justifyContent(FlexAlign.Center).alignItems(HorizontalAlign.Center)
+        }
+        .width('100%').layoutWeight(1).backgroundColor(C.bg)
+      } else if (this.isSubmitting) {
         Column() {
           LoadingProgress().width(48).height(48).color(C.primary)
           Text('发布中...').fontSize(FontSize.body).fontColor(C.textHint).margin({ top: Spacing.lg })

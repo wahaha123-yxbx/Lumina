@@ -3,6 +3,9 @@ import { StarDustRecord } from '../model/StarDustModel'
 import { UserApi } from '../common/UserApi'
 import { ApiClient } from '../common/ApiClient'
 import { Colors, C, FontSize, Spacing, BorderRadius } from '../common/Constants'
+import { ProjectApi } from '../common/ProjectApi'
+import { ProjectModel, getCategoryColor } from '../model/ProjectModel'
+import { MockProjectService } from '../common/MockData'
 import { router } from '@kit.ArkUI'
 
 /**
@@ -14,10 +17,25 @@ export struct ProfilePage {
   @State isLoggedIn: boolean = false
   @State starDustRecords: StarDustRecord[] = []
   @State showStardustDetail: boolean = false
+  @State myProjects: ProjectModel[] = []
   @StorageLink('loginVersion') @Watch('checkLoginState') loginVersion: number = 0
 
   aboutToAppear(): void {
     this.checkLoginState()
+  }
+
+  getMyRoleInProject(proj: ProjectModel): string {
+    for (let i = 0; i < proj.members.length; i++) {
+      if (proj.members[i].userId === CurrentUser.id) return proj.members[i].role
+    }
+    return '成员'
+  }
+
+  async loadMyProjects(): Promise<void> {
+    if (!CurrentUser.id) return
+    this.myProjects = MockProjectService.getMyProjects(CurrentUser.id)
+    const data = await ProjectApi.getMyProjects(CurrentUser.id)
+    if (data.length > 0) this.myProjects = data
   }
 
   // 每次渲染时由 @StorageLink 触发
@@ -28,6 +46,7 @@ export struct ProfilePage {
       if (loggedIn) {
         this.user = CurrentUser
         this.loadFullUserData()
+        this.loadMyProjects()
       } else {
         this.user = new UserModel()
       }
@@ -130,91 +149,146 @@ export struct ProfilePage {
   }
 
   @Builder StatsRow() {
-    Row() {
-      // 星尘余额
-      Column() {
-        Row() {
-          Text('✨')
-            .fontSize(FontSize.title)
-          Text(this.user.starDustBalance.toString())
+    Column() {
+      // 第一行：星尘 + 帖子
+      Row() {
+        Column() {
+          Row() {
+            Text('✨')
+              .fontSize(FontSize.title)
+            Text(this.user.starDustBalance.toString())
+              .fontSize(FontSize.xl)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(Colors.stardustGold)
+              .margin({ left: Spacing.xs })
+          }
+          Text('星尘余额')
+            .fontSize(FontSize.xs)
+            .fontColor(Colors.textHint)
+            .margin({ top: Spacing.xs })
+        }
+        .layoutWeight(1).alignItems(HorizontalAlign.Center)
+        .onClick(() => { this.showStardustDetail = !this.showStardustDetail })
+
+        Divider().vertical(true).height(30).color(C.divider)
+
+        Column() {
+          Text(this.myProjects.length.toString())
             .fontSize(FontSize.xl)
             .fontWeight(FontWeight.Bold)
-            .fontColor(Colors.stardustGold)
-            .margin({ left: Spacing.xs })
+            .fontColor(C.textPrimary)
+          Text('项目')
+            .fontSize(FontSize.xs)
+            .fontColor(C.textHint)
+            .margin({ top: Spacing.xs })
         }
+        .layoutWeight(1).alignItems(HorizontalAlign.Center)
 
-        Text('星尘余额')
-          .fontSize(FontSize.xs)
-          .fontColor(Colors.textHint)
-          .margin({ top: Spacing.xs })
+        Divider().vertical(true).height(30).color(C.divider)
+
+        Column() {
+          Text(this.user.postCount.toString())
+            .fontSize(FontSize.xl)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(C.textPrimary)
+          Text('帖子')
+            .fontSize(FontSize.xs)
+            .fontColor(C.textHint)
+            .margin({ top: Spacing.xs })
+        }
+        .layoutWeight(1).alignItems(HorizontalAlign.Center)
+
+        Divider().vertical(true).height(30).color(C.divider)
+
+        Column() {
+          Text(this.user.followerCount.toString())
+            .fontSize(FontSize.xl)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(C.textPrimary)
+          Text('粉丝')
+            .fontSize(FontSize.xs)
+            .fontColor(C.textHint)
+            .margin({ top: Spacing.xs })
+        }
+        .layoutWeight(1).alignItems(HorizontalAlign.Center)
       }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Center)
-      .onClick(() => { this.showStardustDetail = !this.showStardustDetail })
-
-      Divider().vertical(true).height(30).color(C.divider)
-
-      // 帖子数
-      Column() {
-        Text(this.user.postCount.toString())
-          .fontSize(FontSize.xl)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(Colors.textPrimary)
-
-        Text('帖子')
-          .fontSize(FontSize.xs)
-          .fontColor(Colors.textHint)
-          .margin({ top: Spacing.xs })
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Center)
-
-      // 分割线
-      Divider()
-        .vertical(true)
-        .height(30)
-        .color(C.divider)
-
-      // 关注
-      Column() {
-        Text(this.user.followingCount.toString())
-          .fontSize(16)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(C.textPrimary)
-
-        Text('关注')
-          .fontSize(11)
-          .fontColor(C.textHint)
-          .margin({ top: 2 })
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Center)
-      .onClick(() => {
-        router.pushUrl({ url: 'pages/FollowListPage', params: { userId: CurrentUser.id, type: 'following' } })
-      })
-
-      Divider().vertical(true).height(30).color(C.divider)
-
-      // 粉丝
-      Column() {
-        Text(this.user.followerCount.toString())
-          .fontSize(16)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(C.textPrimary)
-
-        Text('粉丝')
-          .fontSize(11)
-          .fontColor(C.textHint)
-          .margin({ top: 2 })
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Center)
-      .onClick(() => {
-        router.pushUrl({ url: 'pages/FollowListPage', params: { userId: CurrentUser.id, type: 'followers' } })
-      })
+      .width('100%')
     }
     .width('100%')
     .padding({ top: 14, bottom: 14 })
+    .backgroundColor(C.bgCard)
+    .borderRadius(12)
+    .margin({ top: 12 })
+  }
+
+  @Builder MyProjectsSection() {
+    Column() {
+      Row() {
+        Text('📂 我的项目')
+          .fontSize(FontSize.title)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(C.textPrimary)
+        Blank()
+        Text('全部 →')
+          .fontSize(FontSize.xs)
+          .fontColor(C.primary)
+          .onClick(() => { router.pushUrl({ url: 'pages/ProjectSquarePage' }) })
+      }
+      .width('100%')
+
+      if (this.myProjects.length === 0) {
+        Text('还没有参与任何项目')
+          .fontSize(FontSize.sm)
+          .fontColor(C.textHint)
+          .margin({ top: Spacing.md })
+        Text('去项目广场探索感兴趣的项目吧！')
+          .fontSize(FontSize.xs)
+          .fontColor(C.primary)
+          .margin({ top: Spacing.xs })
+          .onClick(() => { router.pushUrl({ url: 'pages/ProjectSquarePage' }) })
+      } else {
+        ForEach(this.myProjects, (proj: ProjectModel) => {
+          Row() {
+            Column() {
+              Text(proj.title)
+                .fontSize(FontSize.body)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(C.textPrimary)
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+              Row() {
+                Text(this.getMyRoleInProject(proj))
+                  .fontSize(10)
+                  .fontColor(proj.leaderId === CurrentUser.id ? '#FF6B35' : C.primary)
+                  .padding({ left: 6, right: 6, top: 1, bottom: 1 })
+                  .borderRadius(3)
+                  .backgroundColor(proj.leaderId === CurrentUser.id ? '#FF6B3518' : C.primaryBg)
+
+                Text(proj.completedTaskCount + '/' + proj.taskCount + ' 任务')
+                  .fontSize(11)
+                  .fontColor(C.textHint)
+                  .margin({ left: Spacing.sm })
+              }
+              .margin({ top: 4 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            Text('›')
+              .fontSize(18)
+              .fontColor(C.textHint)
+          }
+          .width('100%')
+          .padding({ top: Spacing.md, bottom: Spacing.md })
+          .border({ width: { bottom: 0.5 }, color: C.divider })
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/ProjectDetailPage', params: { projectId: proj.id } })
+          })
+        }, (proj: ProjectModel) => proj.id)
+      }
+    }
+    .width('100%')
+    .padding(Spacing.lg)
     .backgroundColor(C.bgCard)
     .borderRadius(12)
     .margin({ top: 12 })
@@ -370,6 +444,7 @@ export struct ProfilePage {
         // --- 已登录状态 ---
         this.UserInfoCard()
         this.StatsRow()
+        this.MyProjectsSection()
         this.MenuSectionBuilder()
       } else {
         // --- 未登录状态 ---

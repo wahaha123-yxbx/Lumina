@@ -15,6 +15,10 @@
     "pages/AboutPage",
     "pages/FollowListPage",
     "pages/ChatListPage",
-    "pages/ChatPage"
+    "pages/ChatPage",
+    "pages/ProjectSquarePage",
+    "pages/ProjectDetailPage",
+    "pages/TaskBoardPage",
+    "pages/PublishProjectPage"
   ]
 }

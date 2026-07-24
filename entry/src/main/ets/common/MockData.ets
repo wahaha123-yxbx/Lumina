@@ -2,6 +2,7 @@ import { PostModel } from '../model/PostModel'
 import { CommentModel } from '../model/CommentModel'
 import { StarDustRecord } from '../model/StarDustModel'
 import { UserModel } from '../model/UserModel'
+import { ProjectModel, TaskModel, ApplicationModel, MatchCandidate, MemberModel } from '../model/ProjectModel'
 
 // --- 辅助工厂函数 ---
 
@@ -121,6 +122,225 @@ const starDustRecords: StarDustRecord[] = [
 ]
 
 // --- MockDataService ---
+
+// ==================== 项目协作 Mock 数据 ====================
+
+function makeMember(userId: string, nickname: string, avatar: string, role: string): MemberModel {
+  const m = new MemberModel()
+  m.userId = userId; m.nickname = nickname; m.avatar = avatar; m.role = role
+  m.joinTime = now - 86400000 * 7
+  return m
+}
+
+function makeProject(
+  id: string, title: string, desc: string, category: string, tags: string[],
+  leaderId: string, leaderName: string, leaderAvatar: string,
+  members: MemberModel[], maxMem: number, status: string,
+  taskCnt: number, doneCnt: number, views: number, created: number
+): ProjectModel {
+  const p = new ProjectModel()
+  p.id = id; p.title = title; p.description = desc; p.category = category
+  p.tags = tags; p.leaderId = leaderId; p.leaderName = leaderName
+  p.leaderAvatar = leaderAvatar; p.members = members; p.maxMembers = maxMem
+  p.status = status; p.taskCount = taskCnt; p.completedTaskCount = doneCnt
+  p.viewCount = views; p.createTime = created; p.updateTime = now
+  return p
+}
+
+function makeTask(
+  id: string, projId: string, title: string, desc: string,
+  status: string, priority: string, assigneeId: string,
+  assigneeName: string, assigneeAvatar: string, deadline: number
+): TaskModel {
+  const t = new TaskModel()
+  t.id = id; t.projectId = projId; t.title = title; t.description = desc
+  t.status = status; t.priority = priority
+  t.assigneeId = assigneeId; t.assigneeName = assigneeName
+  t.assigneeAvatar = assigneeAvatar; t.deadline = deadline
+  t.createTime = now - 86400000; t.updateTime = now
+  return t
+}
+
+const mockProjects: ProjectModel[] = [
+  makeProject(
+    'proj_mock_1', '基于深度学习的校园垃圾智能分类',
+    '本项目拟基于HarmonyOS平台，开发一款集图像识别、分类引导、积分激励于一体的智能垃圾分类应用。需要熟悉深度学习模型部署、ArkUI开发的同学加入。',
+    '科研学术', ['深度学习', 'Python', '鸿蒙'],
+    'u_003', '代码诗人', '🐱',
+    [makeMember('u_003', '代码诗人', '🐱', '队长'),
+     makeMember('u_001', '星尘旅人', '◎', '成员')],
+    4, 'recruiting', 8, 3, 230, now - 86400000 * 3
+  ),
+  makeProject(
+    'proj_mock_2', '校园二手交易平台（鸿蒙版）',
+    '做一个鸿蒙原生二手交易小程序，包含商品发布、搜索、即时通讯、线下交易等功能。后端用Node.js，前端ArkUI。',
+    '创业实践', ['鸿蒙', 'ArkUI', 'Node.js'],
+    'u_001', '星尘旅人', '◎',
+    [makeMember('u_001', '星尘旅人', '◎', '队长')],
+    3, 'recruiting', 6, 1, 180, now - 86400000 * 5
+  ),
+  makeProject(
+    'proj_mock_3', '大学生竞赛信息聚合与组队平台',
+    '爬取各大竞赛平台信息，为校内同学提供竞赛日历、往届经验分享、队友匹配等一站式服务。前端考虑用小程序或鸿蒙。',
+    '竞赛比赛', ['爬虫', '小程序', 'React'],
+    'u_006', '实验室狂魔', '🧪',
+    [makeMember('u_006', '实验室狂魔', '🧪', '队长'),
+     makeMember('u_002', '图书馆小仙女', '📚', '成员'),
+     makeMember('u_005', '操场小旋风', '🏃', '成员')],
+    5, 'active', 12, 5, 420, now - 86400000 * 10
+  ),
+  makeProject(
+    'proj_mock_4', '共建科幻小说《星际灯塔》',
+    '多人协作创作一部科幻小说，设定在2200年的银河系边缘。需要世界观构建、人物设计、章节撰写等分工协作，不需要技术背景，有想象力就行！',
+    '兴趣创作', ['写作', '科幻', '共创'],
+    'u_002', '图书馆小仙女', '📚',
+    [makeMember('u_002', '图书馆小仙女', '📚', '队长')],
+    4, 'recruiting', 10, 4, 310, now - 86400000 * 7
+  ),
+  makeProject(
+    'proj_mock_5', '期末复习资料共享计划',
+    '组织各专业学霸整理期末重点笔记、真题解析、思维导图，分类上传到平台共享。利用星尘激励机制鼓励贡献。',
+    '课程项目', ['学习', '资源共享', '协作'],
+    'u_004', '食堂美食家', '🍔',
+    [makeMember('u_004', '食堂美食家', '🍔', '队长'),
+     makeMember('u_003', '代码诗人', '🐱', '成员')],
+    6, 'recruiting', 5, 2, 150, now - 86400000 * 2
+  ),
+  makeProject(
+    'proj_mock_6', '校园活动报名签到系统',
+    '为学校社团活动提供在线报名、扫码签到、数据统计等服务。鸿蒙端用NFC能力实现一碰签到。',
+    '课程项目', ['鸿蒙', 'NFC', 'ArkUI'],
+    'u_005', '操场小旋风', '🏃',
+    [makeMember('u_005', '操场小旋风', '🏃', '队长')],
+    3, 'recruiting', 4, 0, 90, now - 86400000
+  ),
+]
+
+// 按 projectId 存储的任务 Map
+const taskMap: Map<string, TaskModel[]> = new Map()
+taskMap.set('proj_mock_1', [
+  makeTask('task_m1_1', 'proj_mock_1', '收集训练数据集', '需要标注5000张校园垃圾图片', 'done', 'high',
+    'u_001', '星尘旅人', '◎', now + 86400000 * 3),
+  makeTask('task_m1_2', 'proj_mock_1', '模型训练与调参', '基于ResNet进行迁移学习', 'inProgress', 'high',
+    'u_003', '代码诗人', '🐱', now + 86400000 * 14),
+  makeTask('task_m1_3', 'proj_mock_1', '前端UI设计', '设计垃圾分类拍照页面', 'inProgress', 'medium',
+    '', '未分配', '', now + 86400000 * 10),
+  makeTask('task_m1_4', 'proj_mock_1', 'API接口开发', '后端模型推理接口', 'todo', 'high',
+    '', '未分配', '', now + 86400000 * 20),
+  makeTask('task_m1_5', 'proj_mock_1', '积分系统设计', '垃圾正确分类获得积分', 'todo', 'medium',
+    '', '未分配', '', now + 86400000 * 25),
+  makeTask('task_m1_6', 'proj_mock_1', '用户反馈收集', '收集首批测试用户意见', 'todo', 'low',
+    '', '未分配', '', now + 86400000 * 30),
+  makeTask('task_m1_7', 'proj_mock_1', '部署测试环境', '在服务器上部署', 'done', 'urgent',
+    'u_003', '代码诗人', '🐱', 0),
+  makeTask('task_m1_8', 'proj_mock_1', '编写项目文档', '', 'done', 'low',
+    'u_001', '星尘旅人', '◎', 0),
+])
+taskMap.set('proj_mock_3', [
+  makeTask('task_m3_1', 'proj_mock_3', '爬虫框架搭建', '基于Puppeteer爬取竞赛信息', 'done', 'high',
+    'u_006', '实验室狂魔', '🧪', 0),
+  makeTask('task_m3_2', 'proj_mock_3', '数据清洗与入库', '对爬取数据进行结构化清洗', 'done', 'high',
+    'u_002', '图书馆小仙女', '📚', 0),
+  makeTask('task_m3_3', 'proj_mock_3', '前端首页开发', '竞赛日历视图', 'inProgress', 'high',
+    'u_005', '操场小旋风', '🏃', now + 86400000 * 5),
+  makeTask('task_m3_4', 'proj_mock_3', '用户系统开发', '注册登录+个人信息', 'inProgress', 'medium',
+    'u_006', '实验室狂魔', '🧪', now + 86400000 * 10),
+  makeTask('task_m3_5', 'proj_mock_3', '组队匹配功能', '基于标签的匹配算法', 'done', 'urgent',
+    'u_006', '实验室狂魔', '🧪', 0),
+  makeTask('task_m3_6', 'proj_mock_3', '消息通知系统', 'WebSocket实时推送', 'done', 'medium',
+    'u_002', '图书馆小仙女', '📚', 0),
+  makeTask('task_m3_7', 'proj_mock_3', '搜索功能', '全文检索竞赛信息', 'done', 'medium',
+    'u_005', '操场小旋风', '🏃', 0),
+  makeTask('task_m3_8', 'proj_mock_3', '移动端适配', '响应式布局调试', 'todo', 'medium',
+    '', '未分配', '', now + 86400000 * 15),
+  makeTask('task_m3_9', 'proj_mock_3', '性能优化', '首屏加载优化', 'todo', 'low',
+    '', '未分配', '', now + 86400000 * 20),
+  makeTask('task_m3_10', 'proj_mock_3', '测试用例编写', '', 'todo', 'medium',
+    '', '未分配', '', now + 86400000 * 12),
+  makeTask('task_m3_11', 'proj_mock_3', 'UI设计稿评审', '', 'inProgress', 'low',
+    'u_002', '图书馆小仙女', '📚', now + 86400000 * 3),
+  makeTask('task_m3_12', 'proj_mock_3', '上线部署', '', 'todo', 'high',
+    '', '未分配', '', now + 86400000 * 30),
+])
+
+const mockApplications: ApplicationModel[] = []
+
+const mockMatchCandidates: MatchCandidate[] = [
+  { userId: 'u_005', nickname: '操场小旋风', avatar: '🏃', bio: '体育教育专业，但对AI也很感兴趣', major: '体育教育', level: 2, levelTitle: '星尘学徒', projectCount: 1, matchScore: 5 } as MatchCandidate,
+  { userId: 'u_006', nickname: '实验室狂魔', avatar: '🧪', bio: '化学工程研一，熟悉Python和机器学习', major: '化学工程', level: 4, levelTitle: '星光使者', projectCount: 1, matchScore: 4 } as MatchCandidate,
+  { userId: 'u_004', nickname: '食堂美食家', avatar: '🍔', bio: '食品科学专业，会一点前端', major: '食品科学', level: 3, levelTitle: '星辰旅者', projectCount: 1, matchScore: 2 } as MatchCandidate,
+]
+
+// ==================== Mock 项目服务 ====================
+
+export class MockProjectService {
+  static getProjects(category?: string): ProjectModel[] {
+    const list: ProjectModel[] = []
+    for (let i = 0; i < mockProjects.length; i++) {
+      if (!category || category === '全部' || mockProjects[i].category === category) {
+        list.push(mockProjects[i])
+      }
+    }
+    list.sort((a, b) => {
+      if (a.status === 'recruiting' && b.status !== 'recruiting') return -1
+      if (a.status !== 'recruiting' && b.status === 'recruiting') return 1
+      return b.updateTime - a.updateTime
+    })
+    return list
+  }
+
+  static getProjectById(id: string): ProjectModel | undefined {
+    for (let i = 0; i < mockProjects.length; i++) {
+      if (mockProjects[i].id === id) return mockProjects[i]
+    }
+    return undefined
+  }
+
+  static getHotProjects(limit: number = 3): ProjectModel[] {
+    const recruiting: ProjectModel[] = []
+    for (let i = 0; i < mockProjects.length; i++) {
+      if (mockProjects[i].status === 'recruiting') recruiting.push(mockProjects[i])
+    }
+    recruiting.sort((a, b) => b.viewCount - a.viewCount)
+    const result: ProjectModel[] = []
+    const count = limit < recruiting.length ? limit : recruiting.length
+    for (let i = 0; i < count; i++) result.push(recruiting[i])
+    return result
+  }
+
+  static getNewProjects(limit: number = 3): ProjectModel[] {
+    const sorted: ProjectModel[] = []
+    for (let i = 0; i < mockProjects.length; i++) sorted.push(mockProjects[i])
+    sorted.sort((a, b) => b.createTime - a.createTime)
+    const result: ProjectModel[] = []
+    const count = limit < sorted.length ? limit : sorted.length
+    for (let i = 0; i < count; i++) result.push(sorted[i])
+    return result
+  }
+
+  static getTasksByProject(projectId: string): TaskModel[] {
+    return taskMap.get(projectId) || []
+  }
+
+  static getMatchCandidates(): MatchCandidate[] {
+    return mockMatchCandidates
+  }
+
+  static getMyProjects(userId: string): ProjectModel[] {
+    const result: ProjectModel[] = []
+    for (let i = 0; i < mockProjects.length; i++) {
+      const p = mockProjects[i]
+      let found = false
+      for (let j = 0; j < p.members.length; j++) {
+        if (p.members[j].userId === userId) { found = true; break }
+      }
+      if (found) result.push(p)
+    }
+    return result
+  }
+}
+
+// ==================== MockDataService (原有) ====================
 
 export class MockDataService {
   static getHomePosts(): PostModel[] {

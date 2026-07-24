@@ -13,36 +13,49 @@ struct RegisterPage {
   @State password: string = ''
   @State confirmPassword: string = ''
   @State nickname: string = ''
+  @State email: string = ''
+  @State code: string = ''
   @State isLoading: boolean = false
+  @State isSendingCode: boolean = false
+  @State codeSent: boolean = false
   @State errorMsg: string = ''
 
+  async doSendCode(): Promise<void> {
+    if (!this.email.trim()) {
+      this.errorMsg = '请先输入邮箱'
+      return
+    }
+    this.isSendingCode = true
+    this.errorMsg = ''
+    const msg = await UserApi.sendCode(this.email.trim())
+    this.isSendingCode = false
+    if (msg.includes('已发送') || msg.includes('ok')) {
+      this.codeSent = true
+      promptAction.showToast({ message: '验证码已发送，请查收邮件' })
+    } else {
+      this.errorMsg = msg
+    }
+  }
+
   async doRegister(): Promise<void> {
-    if (!this.studentId.trim()) {
-      this.errorMsg = '请输入学号'
-      return
-    }
-    if (!this.password || this.password.length < 6) {
-      this.errorMsg = '密码至少6位'
-      return
-    }
-    if (this.password !== this.confirmPassword) {
-      this.errorMsg = '两次密码不一致'
-      return
-    }
+    if (!this.studentId.trim()) { this.errorMsg = '请输入学号'; return }
+    if (!this.password || this.password.length < 6) { this.errorMsg = '密码至少6位'; return }
+    if (this.password !== this.confirmPassword) { this.errorMsg = '两次密码不一致'; return }
+    if (!this.email.trim()) { this.errorMsg = '请输入邮箱'; return }
+    if (!this.code.trim()) { this.errorMsg = '请输入验证码'; return }
 
     this.isLoading = true
     this.errorMsg = ''
 
     const result = await UserApi.register(
-      this.studentId.trim(),
-      this.password,
-      this.nickname.trim() || '星尘旅人'
+      this.studentId.trim(), this.password,
+      this.nickname.trim() || '星尘旅人',
+      this.email.trim(), this.code.trim()
     )
 
     this.isLoading = false
 
     if (result.success && result.data) {
-      // 注册成功，自动登录
       loginCurrentUser(result.data)
       AppStorage.setOrCreate('loginVersion', Date.now())
       promptAction.showToast({ message: '注册成功！欢迎加入 Lumina ✨' })
@@ -90,6 +103,36 @@ struct RegisterPage {
             this.InputField('密码（至少6位）', this.password, (v) => { this.password = v; this.errorMsg = '' }, true)
             this.InputField('确认密码', this.confirmPassword, (v) => { this.confirmPassword = v; this.errorMsg = '' }, true)
             this.InputField('昵称（选填）', this.nickname, (v) => { this.nickname = v })
+
+            // 邮箱 + 验证码
+            Row() {
+              TextInput({ placeholder: '邮箱（用于接收验证码）', text: this.email })
+                .placeholderColor(C.textHint)
+                .fontSize(FontSize.title)
+                .fontColor(C.textPrimary)
+                .backgroundColor(C.bgInput)
+                .borderRadius(BorderRadius.md)
+                .height(50)
+                .layoutWeight(1)
+                .padding({ left: Spacing.lg })
+                .onChange((v: string) => { this.email = v; this.errorMsg = '' })
+
+              Button(this.isSendingCode ? '...' : (this.codeSent ? '已发送' : '获取验证码'))
+                .fontSize(13)
+                .fontColor(Color.White)
+                .backgroundColor(this.codeSent ? C.textHint : C.primary)
+                .borderRadius(BorderRadius.md)
+                .height(50)
+                .width(96)
+                .padding({ left: 8, right: 8 })
+                .margin({ left: Spacing.sm })
+                .enabled(!this.isSendingCode && !this.codeSent)
+                .onClick(() => { this.doSendCode() })
+            }
+            .width('100%')
+            .margin({ top: Spacing.md })
+
+            this.InputField('验证码', this.code, (v) => { this.code = v; this.errorMsg = '' })
 
             if (this.errorMsg) {
               Text(this.errorMsg)
